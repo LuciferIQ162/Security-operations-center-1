@@ -1,5 +1,6 @@
 """FastAPI application for AI SOC Agent."""
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Response, Depends
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, Any, Optional
 from pydantic import BaseModel
@@ -470,6 +471,28 @@ async def monitor_alert(req: MonitorAlertRequest):
     }
     result = await agent.process_alert(raw)
     return result
+
+@app.get("/sse/activity")
+async def sse_activity():
+    async def event_stream():
+        while True:
+            async with async_session_maker() as session:
+                inv_res = await session.execute(
+                    select(InvestigationModel).order_by(desc(InvestigationModel.started_at)).limit(5)
+                )
+                activities = []
+                for inv in inv_res.scalars().all():
+                    for step in inv.investigation_timeline or []:
+                        activities.append({
+                            "type": step.get("action"),
+                            "message": step.get("details"),
+                            "timestamp": step.get("timestamp"),
+                        })
+                payload = {"items": activities[-10:]}
+                yield f"data: {payload}\n\n"
+            import asyncio
+            await asyncio.sleep(3)
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 @app.post("/alerts/{alert_id}/feedback", response_model=Dict[str, Any])
 async def submit_feedback(alert_id: str, feedback_request: FeedbackRequest):
     """

@@ -15,9 +15,9 @@ class Settings:
         self.secret_key: str = os.getenv("SECRET_KEY", "change_me")
         self.session_exp_minutes: int = int(os.getenv("SESSION_EXP_MINUTES", "30"))
         self.cookie_secure: bool = os.getenv("COOKIE_SECURE", "false").lower() == "true"
-        self.bootstrap_admin_username: Optional[str] = os.getenv("admin")
-        self.bootstrap_admin_password: Optional[str] = os.getenv("6190")
-        self.bootstrap_admin_email: Optional[str] = os.getenv("devil.com444@gmail.com")
+        self.bootstrap_admin_username: Optional[str] = os.getenv("ADMIN_USERNAME")
+        self.bootstrap_admin_password: Optional[str] = os.getenv("ADMIN_PASSWORD")
+        self.bootstrap_admin_email: Optional[str] = os.getenv("ADMIN_EMAIL")
         
         # Database
         self.database_url: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./soc_agent.db")

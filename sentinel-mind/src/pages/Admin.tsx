@@ -3,6 +3,7 @@ import { API_BASE_URL } from "@/lib/utils";
 import { Dashboard } from "@/components/Dashboard";
 import { Button } from "@/components/ui/button";
 import { IncidentsPanel } from "@/components/IncidentsPanel";
+import { toast } from "@/components/ui/sonner";
 
 export default function Admin() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
@@ -19,6 +20,24 @@ export default function Admin() {
     };
     check();
   }, []);
+  
+  useEffect(() => {
+    if (authorized) {
+      const es = new EventSource(`${API_BASE_URL}/sse/activity`);
+      es.onmessage = (evt) => {
+        try {
+          const data = JSON.parse(evt.data.replace(/^data: /, ""));
+          const items = data?.items || [];
+          if (items.length > 0) {
+            const last = items[items.length - 1];
+            toast(`${last.type}: ${last.message}`);
+          }
+        } catch {}
+      };
+      es.onerror = () => {};
+      return () => es.close();
+    }
+  }, [authorized]);
 
   const logout = async () => {
     const csrf = document.cookie.split("; ").find((c) => c.startsWith("csrf_token="))?.split("=")[1];

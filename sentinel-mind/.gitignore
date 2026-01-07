@@ -1,4 +1,10 @@
 # Logs
+
+# Env files
+.env
+
+# Build output
+dist
 logs
 *.log
 npm-debug.log*

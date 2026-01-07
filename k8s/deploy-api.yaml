@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: soc-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: soc-api
+  template:
+    metadata:
+      labels:
+        app: soc-api
+    spec:
+      containers:
+        - name: api
+          image: app/soc-api:ci
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              value: postgresql+asyncpg://user:pass@postgres:5432/soc?sslmode=require
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: soc-secrets
+                  key: secret_key
+            - name: COOKIE_SECURE
+              value: "true"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: soc-api
+spec:
+  selector:
+    app: soc-api
+  ports:
+    - port: 8000
+      targetPort: 8000
