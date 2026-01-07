@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DATABASE_URL=sqlite+aiosqlite:///./soc_agent.db
+      - AGENT_AUTONOMY_LEVEL=high
+      - LEARNING_ENABLED=true
+    ports:
+      - "8000:8000"
+  ui:
+    build:
+      context: .
+      dockerfile: sentinel-mind/Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
